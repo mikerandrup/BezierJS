@@ -26,23 +26,16 @@
 		time
 	);
 */
-   
-var bezier = (function(){
+
+(function(exports){
 
 	var Point = function (x, y) {
 		this.x = x || 0;
 		this.y = y || 0;
 		return this;
-	};
-	
-	var interpolateLinear = function (pointA, pointB, time) {
-		return {
-			x: pointA.x + (pointB.x - pointA.x) * time,
-			y: pointA.y + (pointB.y - pointA.y) * time,
-		}
-	};
-	
-	var findReverseRadianAngle = function(rawAngle) {
+	},
+
+	findReverseRadianAngle = function(rawAngle) {
 		// -1 .. 1 possible range
 		var shiftedAngle = rawAngle + 1,
 			shiftedReverseAngle = 2 - rawAngle,
@@ -57,15 +50,16 @@ var bezier = (function(){
 			return new Point(x, y);
 		},
 
-		calc: function(p1, p2, p3, p4, time) {
-			var ab = interpolateLinear(p1, p2, time),
-				bc = interpolateLinear(p2, p3, time),
-				cd = interpolateLinear(p3, p4, time),
-				abbc = interpolateLinear(ab, bc, time),
-				bccd = interpolateLinear(bc, cd, time);
+		findPoint: function(p1, p2, p3, p4, time) {
+			var ab = bezObj.interpolateLinear(p1, p2, time),
+				bc = bezObj.interpolateLinear(p2, p3, time),
+				cd = bezObj.interpolateLinear(p3, p4, time),
+				abbc = bezObj.interpolateLinear(ab, bc, time),
+				bccd = bezObj.interpolateLinear(bc, cd, time);
 				
-			return interpolateLinear(abbc, bccd, time);
+			return bezObj.interpolateLinear(abbc, bccd, time);
 		},
+		
 		
 		findAngle: function (p1, p2, p3, p4, time) {
 
@@ -77,8 +71,8 @@ var bezier = (function(){
 				if (earlierTime < 0) earlierTime = 0;
 				if (laterTime > 1) laterTime = 1;
 				
-			var earlierPoint = bezObj.calc(p1, p2, p3, p4, earlierTime),
-                laterPoint = bezObj.calc(p1, p2, p3, p4, laterTime),
+			var earlierPoint = bezObj.findPoint(p1, p2, p3, p4, earlierTime),
+                laterPoint = bezObj.findPoint(p1, p2, p3, p4, laterTime),
 
                 xDelta = laterPoint.x - earlierPoint.x,
                 yDelta = laterPoint.y - earlierPoint.y,
@@ -100,23 +94,27 @@ var bezier = (function(){
 			for (i=0; i<steps; i++) {
 				t = i / (steps-1);
 				
-				resultPoint = bezier.calc(
+				resultPoint = bezObj.findPoint(
 					a, b,
 					c, d,
 					t
 				);
 
-				context.fillRect(resultPoint.x, resultPoint.y, 2, 2);
+				context.fillRect(resultPoint.x, resultPoint.y, 30, 30);
+			}
+		},
+		
+		interpolateLinear: function (pointA, pointB, time) {
+			return {
+				x: pointA.x + (pointB.x - pointA.x) * time,
+				y: pointA.y + (pointB.y - pointA.y) * time,
 			}
 		}
-		
 	}
 	
-	return bezObj;
+	exports.Bezier = bezObj;
 
-}());
-
-console.log("bezier loaded", bezier);   
+}(window.Mike));
 
 ///////////////////////////////////////////////////////////////
 // Also check out http://13thparallel.com/archive/bezier-curves/
